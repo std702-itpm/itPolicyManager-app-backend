@@ -6,7 +6,7 @@ const Policy = mongoose.model('Policy');
 
 exports.companyGet = (req, res) => {
     if (req.query.type === "company") {
-        Company.findOne({company_name: req.query.company_name})
+        Company.findOne({company_name: req.query._id})
             .exec()
             .then(oneCompany => {
                 res.json(oneCompany);
