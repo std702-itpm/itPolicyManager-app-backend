@@ -21,18 +21,35 @@ const reviewPolicyController = require("./controllers/reviewController");
 const clientReviewPolicyController = require("./controllers/clientReviewerController");
 const assessmentResultController = require("./controllers/assessmentResultController");
 
+// New company registration
+router.route("/register")
+    .post(companyController.registerPost)
+    .all(errorHandlingController.MethodNotAllowed);
+
 // Login
 router.route("/signin")
     .post(loginController.signInPost)
     .all(errorHandlingController.MethodNotAllowed);
 
+// Middleware
+// All endpoints below require authentication
+router.use((req, res, next) => {
+    if (req.isAuthenticated()) {
+        console.log("go to /hello");
+        next()
+    } else {
+        res.status(401)
+            .json({
+            status: "error",
+            message: "Authentication needed"
+        });
+    }
+});
+
 // Company controller
 router.route("/company")
     .get(companyController.companyGet)
     .post(companyController.companyPost)
-    .all(errorHandlingController.MethodNotAllowed);
-router.route("/register")
-    .post(companyController.registerPost)
     .all(errorHandlingController.MethodNotAllowed);
 router.route("/deleteCompany")
     .post(companyController.companyDelete)

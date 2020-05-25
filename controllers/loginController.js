@@ -1,65 +1,36 @@
 const mongoose = require('mongoose');
+const passport = require('../configs/passport.config')
 const Company = require("../models/company.model.js");
 const User = mongoose.model('User');
 
-exports.signInPost = (request, response) => {
-    let loginData = filterRequest(request); //Get the parsed information
-    User.findOne(loginData)
-        .populate('company', 'company_name')
-        .exec()
-        .then(result => {
-            if (!result) {
-                // If no user has been found
-                response
-                    .status(401)
-                    .json(getUserNotFoundMessage());
-            } else {
-                createSession(result, request);
-                response
-                    .status(200)
-                    .json(getLoginMessage(result));
+// Inside I use IIFE, as recommended PassportJS authenticate() documentation
+// http://www.passportjs.org/docs/authenticate/
+exports.signInPost = ((req, res, next) => {
+    passport.authenticate('local', (error, user, info) => {
+        if (info) {
+            return res.json({
+                status: "info",
+                message: info
+            });
+        }
+        if (error) {
+            return next(error);
+        }
+        if (!user) {
+            return res
+                .status(401)
+                .json(getInvalidCredentialsMessage());
+        }
+        req.login(user, (err) => {
+            if (err) {
+                return next(err);
             }
+            return res
+                .status(200)
+                .json(getLoginMessage(user));
         })
-        .catch(error => {
-            logError(error);
-            response
-                .status(500)
-                // TODO change the error's message
-                .json({error: error.toString()});
-        });
-}
-
-/**
- * Extracts required data form the request
- * in order to create filter for user search
- * @param request
- * @returns Filter
- */
-function filterRequest(request) {
-    let filter = {};
-    filter.username = request.body.username;
-    filter.password = request.body.password;
-    return filter;
-}
-
-/**
- * Processes an error occurrence
- * @param error - Error
- */
-function logError(error) {
-    console.log("error: " + error);
-}
-
-/**
- * Creates a message, if by given credentials not a single user has been found
- * @returns Message object
- */
-function getUserNotFoundMessage() {
-    return {
-        message: "Wrong username or password!",
-        value: false
-    };
-}
+    })(req, res, next);
+});
 
 /**
  * Creates a message, in case of successful login
@@ -77,16 +48,13 @@ function getLoginMessage(result) {
     };
 }
 
-// TODO
-//  Find out how to handle sessions within ExpressJS,
-//  not sure if this code works properly
 /**
- * SUPPOSED to create session, but I am not sure
- * @param result
- * @param request
+ * Creates a message, if by given credentials not a single user has been found
+ * @returns Message object
  */
-function createSession(result, request) {
-    sess = request.session;
-    sess.userId = result._id;
-    sess.cmpanyId = result.company._id;
+function getInvalidCredentialsMessage() {
+    return {
+        status: 'error',
+        message: 'Invalid credentials'
+    };
 }

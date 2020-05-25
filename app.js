@@ -3,7 +3,7 @@ const mongoose = require('./configs/mongoose.config');
 var session = require('express-session');
 const mongoStore = require('connect-mongo')(session);
 const cors = require('cors');
-
+const passport = require('./configs/passport.config')
 require('dotenv').config();
 
 const app = express();
@@ -22,6 +22,9 @@ app.use(session({
 
 app.use(cors());
 app.use(express.json());
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Routing
 const indexRoute = require('./routes');

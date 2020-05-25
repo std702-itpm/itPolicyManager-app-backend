@@ -191,7 +191,7 @@ exports.registerPost = (req, res) => {
                         value: false
                     })
                 }
-                //Create new user
+                //Creat e new user
                 var NewUser = new User({
                     user_type: 'comp_initiator',
                     company: companyId,

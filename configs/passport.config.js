@@ -17,7 +17,7 @@ passport.use(new LocalStrategy(
             if (user.password !== password) {
                 return done(null, false)
             }
-            if (username === user.login && password === user.password) {
+            if (username === user.username && password === user.password) {
                 return done(null, user);
             }
         })
@@ -25,14 +25,12 @@ passport.use(new LocalStrategy(
 ));
 
 passport.serializeUser((user, done) => {
-    console.log('ser')
     // The second parameter defines what will be stored in the session.passport
     done(null, user);
 });
 
 //TODO must be remade in a proper way
 passport.deserializeUser((user, done) => {
-    console.log('des');
     //I should not store all user information in the session
     done(null, user);
 });
