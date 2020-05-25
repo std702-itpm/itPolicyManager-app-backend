@@ -7,7 +7,7 @@ const router = express.Router();
 const errorHandlingController = require("./controllers/errorHandlingController");
 
 // Define controllers here
-const loginController = require("./controllers/loginController");
+const authController = require("./controllers/authenticationController");
 const questionController = require("./controllers/questionController");
 const assessmentController = require("./controllers/assessmentController");
 const companyController = require("./controllers/companyController");
@@ -28,7 +28,8 @@ router.route("/register")
 
 // Login
 router.route("/signin")
-    .post(loginController.signInPost)
+    .post(authController.signInPost)
+    .delete(authController.logout)
     .all(errorHandlingController.MethodNotAllowed);
 
 // Middleware
