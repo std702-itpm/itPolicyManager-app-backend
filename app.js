@@ -9,7 +9,7 @@ require('dotenv').config();
 const app = express();
 
 app.use(session({
-    secret: 'Somesercrets',
+    secret: process.env.SECRET,
     cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 1 // 1 day
     },
