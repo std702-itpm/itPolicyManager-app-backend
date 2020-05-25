@@ -1,7 +1,4 @@
-const mongoose = require('mongoose');
 const passport = require('../configs/passport.config')
-const Company = require("../models/company.model.js");
-const User = mongoose.model('User');
 
 // Inside I use IIFE, as recommended PassportJS authenticate() documentation
 // http://www.passportjs.org/docs/authenticate/
