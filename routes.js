@@ -104,15 +104,16 @@ router.route("/surveyResult")
 // Subscribed policy
 router.route("/subscribedPolicy")
     .get(subscribedPolicyController.subscribedPolicyGet)
+    .post(subscribedPolicyController.subscribedPolicyPost)
     .all(errorHandlingController.MethodNotAllowed);
 router.route("/getSubscribedPolicy")
     .get(subscribedPolicyController.getSubscribedPolicy)
     .all(errorHandlingController.MethodNotAllowed);
-router.route("/subscribedPolicy")
-    .post(subscribedPolicyController.subscribedPolicyPost)
-    .all(errorHandlingController.MethodNotAllowed);
 router.route("/addSubscribedPolicy")
     .post(subscribedPolicyController.subscribedPolicySave)
+    .all(errorHandlingController.MethodNotAllowed);
+router.route("/updateSubscribedPolicyContent")
+    .post(subscribedPolicyController.updateSubscribedPolicyContent)
     .all(errorHandlingController.MethodNotAllowed);
 router.route("/updateSubscribedPolicy")
     .post(subscribedPolicyController.subscribedPolicyUpdate)
@@ -130,16 +131,12 @@ router.route("/getOnePolicy/:id")
     .all(errorHandlingController.MethodNotAllowed);
 router.route("/reviewPolicy")
     .get(reviewPolicyController.reviewPolicyGet)
-    .all(errorHandlingController.MethodNotAllowed);
-router.route("/reviewPolicy")
     .post(reviewPolicyController.reviewPolicyPost)
     .all(errorHandlingController.MethodNotAllowed);
 
 // Client review subscribed policy
 router.route("/clientReviewer")
     .get(clientReviewPolicyController.clientReviewerGet)
-    .all(errorHandlingController.MethodNotAllowed);
-router.route("/clientReviewer")
     .post(clientReviewPolicyController.clientReviewerPost)
     .all(errorHandlingController.MethodNotAllowed);
 
