@@ -1,19 +1,27 @@
 const express = require('express');
 var session = require('express-session');
-const sessionConfig = require('./configs/session.config')
 const cors = require('cors');
-const passport = require('./configs/passport.config')
 require('dotenv').config();
 
 const app = express();
 
+const sessionConfig = require('./configs/session.config')
 app.use(session(sessionConfig));
 
-app.use(cors());
+const corsConfig = require('./configs/cors.config');
+app.use(cors(corsConfig));
+
+const passport = require('./configs/passport.config')
 app.use(express.json());
 
 app.use(passport.initialize());
 app.use(passport.session());
+
+app.use(function (req, res, next) {
+    res.header("Access-Control-Allow-Origin", "http://localhost:3000"); // update to match the domain you will make the request from
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
 
 // Routing
 const indexRoute = require('./routes');
