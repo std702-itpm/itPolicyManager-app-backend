@@ -6,7 +6,7 @@ const Policy = mongoose.model('Policy');
 
 exports.companyGet = (req, res) => {
     if (req.query.type === "company") {
-        Company.findOne({company_name: req.query._id})
+        Company.findOne({ company_name: req.query._id })
             .exec()
             .then(oneCompany => {
                 res.json(oneCompany);
@@ -15,7 +15,7 @@ exports.companyGet = (req, res) => {
                 console.log(err);
             });
     } else if (req.query.type === "companyAll") {
-        Company.find({status: true})
+        Company.find({ status: true })
             .exec()
             .then(companies => {
                 res.json(companies);
@@ -24,7 +24,7 @@ exports.companyGet = (req, res) => {
                 console.log(err);
             });
     } else if (req.query.type === "companyAllInactive") {
-        Company.find({status: false})
+        Company.find({ status: false })
             .exec()
             .then(companies => {
                 res.json(companies)
@@ -34,7 +34,7 @@ exports.companyGet = (req, res) => {
             });
     } else {
         console.log("My role is user" + req.query._id)
-        User.findOne({"_id": req.query._id})
+        User.findOne({ "_id": req.query._id })
             .exec()
             .then(user => {
                 console.log("user: " + user);
@@ -68,7 +68,7 @@ exports.companyPost = (req, res) => {
             .catch(err => {
                 console.log(err);
             });
-    // for some reason there is a user deletion in snippet below
+        // for some reason there is a user deletion in snippet below
     } else if (matchPolicy.status === "delete") {
         console.log("Status" + matchPolicy.status);
         User.findByIdAndRemove({
@@ -87,7 +87,7 @@ exports.companyPost = (req, res) => {
             });
         // And of course we need UPDATE
     } else {
-        Company.findOneAndUpdate({"company_name": matchPolicy.name},
+        Company.findOneAndUpdate({ "company_name": matchPolicy.name },
             {
                 "$push": {
                     "match_policy": matchPolicy.policies
@@ -102,8 +102,8 @@ exports.companyPost = (req, res) => {
                 });
             })
             .catch(err => {
-                    console.log(err);
-                }
+                console.log(err);
+            }
             );
     }
 }
@@ -158,7 +158,7 @@ const transporter = Nodemailer.createTransport({
 exports.registerPost = (req, res) => {
     let RegInfo = req.body; //Get the parsed information
     console.log(RegInfo);
-    Company.findOne({nzbn: RegInfo.nzbnInput}, function (error, company) {
+    Company.findOne({ nzbn: RegInfo.nzbnInput }, function (error, company) {
         //Save the Address
         let Address = "";
         Address = RegInfo.bAddr + " " + RegInfo.bAddr2 + " " + RegInfo.bCity + " " + RegInfo.bState + " " + RegInfo.bZip;
@@ -200,7 +200,7 @@ exports.registerPost = (req, res) => {
                 })
                 console.log(NewUser);
                 NewUser.save(function (err) {
-                    postCreateNewUser(err)
+                    postCreateNewUser(err, NewCompany, NewUser)
                 })
                 res.json({
                     message: "Registration Successful!",
@@ -213,19 +213,19 @@ exports.registerPost = (req, res) => {
     });
 };
 
-function postCreateNewUser(err) {
+function postCreateNewUser(err, newCompany, newUser) {
     //set up email content
     const mailOptions = {
         from: 'itpsychiatrist.policymanager@gmail.com', // sender address
-        to: NewCompany.company_email, // list of receivers
+        to: newCompany.company_email, // list of receivers
         subject: 'Your IT Policy Manager Login Credentials', // Subject line
         html:
             '<h2>Welcome to IT Policy Manager!</h2>' +
             '<p> Thank you for registering. <br>' +
             'Below is your login details, use these credential to acces your IT Policy Manager Account.<br>' +
             '<br>' +
-            'User Name:' + NewUser.username + ' <br>' +
-            'Temporary Password: ' + NewUser.password + ' </p>' +
+            'User Name:' + newUser.username + ' <br>' +
+            'Temporary Password: ' + newUser.password + ' </p>' +
             '<p>Please click on the link to sign-in. </p>' +
             '<a href="http://localhost:3000/signin-page">IT Policy Manager Login</a>  '
     };
@@ -243,7 +243,7 @@ exports.companyDelete = (req, res) => {
         _id: data.companyId
     }, function (error, response) {
         if (!error) {
-            User.findOneAndRemove({company: data.companyId}, function (error2, response2) {
+            User.findOneAndRemove({ company: data.companyId }, function (error2, response2) {
                 if (!error2) {
                     res.json({
                         status: "success"
@@ -260,7 +260,7 @@ exports.companyDelete = (req, res) => {
 
 exports.getSuggestedPolicy = async (req, res) => {
     let user_id = req.query.user_id;
-    let query = await User.findOne({_id: user_id})
+    let query = await User.findOne({ _id: user_id })
         .populate({
             path: 'company',
             model: 'Company',
