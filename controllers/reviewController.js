@@ -7,8 +7,8 @@ const Nodemailer = require('nodemailer');
 exports.reviewPolicyGet = async (req, res) => {
     console.log("company name" + req.query.company_name);
     Company.findOne({
-            company_name: req.query.company_name
-        },
+        company_name: req.query.company_name
+    },
         function (error, company) {
             if (error) {
                 console.log("Error: " + error);
@@ -51,14 +51,15 @@ exports.reviewPolicyPost = async (req, res) => {
             console.log("Error: " + error);
         } else {
             let policy = companyDetails.subscribed_policy;
-            for(let i=0;i<policy.length;i++){
-                if(dataInfo.status==="not reviewed" && policy[i].name===dataInfo.policyName){                    
-                    policy[i].reviewer=dataInfo.reviewerList;
-                    if(dataInfo.isPolicyBlocked===false){
-                        policy[i].status="confirmation";
+            //Set reviewerId List to selected policy
+            for (let i = 0; i < policy.length; i++) {
+                if (dataInfo.status === "not reviewed" && policy[i].name === dataInfo.policyName) {
+                    policy[i].reviewer = dataInfo.reviewerList;
+                    if (dataInfo.isPolicyBlocked === false) {
+                        policy[i].status = "confirmation";
                     }
                 }
-                
+
             }
 
             //update policy status
@@ -94,7 +95,7 @@ exports.reviewPolicyPost = async (req, res) => {
             // }
             companyDetails.subscribed_policy = policy;
             console.log("companyDetails.subscribed_policy ==> " + companyDetails.subscribed_policy)
-            Company.updateOne({_id: companyDetails._id},{
+            Company.updateOne({ _id: companyDetails._id }, {
                 subscribed_policy: companyDetails.subscribed_policy
             }, function (err, response) {
                 if (err) {
@@ -123,7 +124,7 @@ exports.reviewPolicyPost = async (req, res) => {
                                     status = "reviewed";
                                 }
                                 userDetails.user_type = "";
-                                console.log("Datainfo"+companyDetails.subscribed_policy.name)
+                                console.log("Datainfo" + companyDetails.subscribed_policy.name)
                                 userDetails.reviewPolicyList.push(dataInfo.policy_name);
                                 //Generate access link
                                 let pName = dataInfo.policyName.replace(/\s+/g, "-");
@@ -138,7 +139,6 @@ exports.reviewPolicyPost = async (req, res) => {
                                         subject: pName + 'review request', // Subject line
                                         html: '<h2>Welcome to IT Policy Manager!</h2>' +
                                             '<p> You have been set as a reviewer for dataInfo.policyName. <br>' +
-                                            'Below is the link to view and review the policy.<br><br>' +
                                             'Below is the link to view and review the policy.<br><br>' +
                                             '<a href=' + generalLink + '>CLICK HERE: Policy document to be reviewed.</a>  '
                                     };
