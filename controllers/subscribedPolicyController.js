@@ -164,17 +164,6 @@ exports.subscribedPolicySave = (req, res) => {
         date_subscribed: moment(),
         date_expired: moment().add(12, 'M'),
         version: subscribedPolicyDetails.version
-        // reviewer_list:subscribedPolicyDetails.reviewer_list
-        //         review_status: subscribedPolicyDetails.review_status,
-        //         review_reminder_email_sent:subscribedPolicyDetails.review_reminder_email_sent,
-        //         review_reminder_email_error:subscribedPolicyDetails.review_reminder_email_error,
-        //         review_first_email_sent_time:subscribedPolicyDetails.review_first_email_sent_time,
-        //   reviewer_list:[{
-        //     review_status: false,
-        //     review_reminder_email_sent:false,
-        //     review_reminder_email_error:false,
-        //     review_first_email_sent_time:"",
-        //   }]
     });
     subscribedPolicy.save();
 }
