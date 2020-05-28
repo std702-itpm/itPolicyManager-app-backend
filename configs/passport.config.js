@@ -7,20 +7,20 @@ const User = mongoose.model('User');
 passport.use(new LocalStrategy(
     {usernameField: 'username'},
     (username, password, done) => {
-        User.findOne({username: username}, function (err, user) {
-            if (err) {
+        User.findOne({username: username, password: password})
+            .populate('company', 'company_name')
+            .exec()
+            .then(user => {
+                if (!user) {
+                    return done(null, false)
+                }
+                if (username === user.username && password === user.password) {
+                    return done(null, user);
+                }
+            })
+            .catch(err => {
                 return done(err);
-            }
-            if (!user) {
-                return done(null, false)
-            }
-            if (user.password !== password) {
-                return done(null, false)
-            }
-            if (username === user.username && password === user.password) {
-                return done(null, user);
-            }
-        })
+            });
     }
 ));
 
