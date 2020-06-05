@@ -56,12 +56,10 @@ exports.createPaymentPost = async (req, res) => {
 
   //add subscribed policy to the company
   //req: company name and policies details
-  function addSubscribedPolicies(name, policies) {
-    // console.log("subscribedPolicy name: "+subscribedPolicy.name)
+  function addSubscribedPolicies(companyName, policies) {
     Company.findOne({
-      company_name: name
+      company_name: companyName
     }, function (error, company) {
-      // console.log("company: "+company);
       company.subscribed_policy.push(policies);
       company.save();
     })

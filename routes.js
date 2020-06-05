@@ -7,7 +7,7 @@ const router = express.Router();
 const errorHandlingController = require("./controllers/errorHandlingController");
 
 // Define controllers here
-const loginController = require("./controllers/loginController");
+const authController = require("./controllers/authenticationController");
 const questionController = require("./controllers/questionController");
 const assessmentController = require("./controllers/assessmentController");
 const companyController = require("./controllers/companyController");
@@ -21,18 +21,25 @@ const reviewPolicyController = require("./controllers/reviewController");
 const clientReviewPolicyController = require("./controllers/clientReviewerController");
 const assessmentResultController = require("./controllers/assessmentResultController");
 
+// New company registration
+router.route("/register")
+    .post(companyController.registerPost)
+    .all(errorHandlingController.MethodNotAllowed);
+
 // Login
 router.route("/signin")
-    .post(loginController.signInPost)
+    .post(authController.signInPost)
+    .delete(authController.logout)
     .all(errorHandlingController.MethodNotAllowed);
+
+// Middleware
+// All endpoints below require authentication
+router.use(errorHandlingController.AuthorizationFilter);
 
 // Company controller
 router.route("/company")
     .get(companyController.companyGet)
     .post(companyController.companyPost)
-    .all(errorHandlingController.MethodNotAllowed);
-router.route("/register")
-    .post(companyController.registerPost)
     .all(errorHandlingController.MethodNotAllowed);
 router.route("/deleteCompany")
     .post(companyController.companyDelete)
@@ -104,15 +111,16 @@ router.route("/surveyResult")
 // Subscribed policy
 router.route("/subscribedPolicy")
     .get(subscribedPolicyController.subscribedPolicyGet)
+    .post(subscribedPolicyController.subscribedPolicyPost)
     .all(errorHandlingController.MethodNotAllowed);
 router.route("/getSubscribedPolicy")
     .get(subscribedPolicyController.getSubscribedPolicy)
     .all(errorHandlingController.MethodNotAllowed);
-router.route("/subscribedPolicy")
-    .post(subscribedPolicyController.subscribedPolicyPost)
-    .all(errorHandlingController.MethodNotAllowed);
 router.route("/addSubscribedPolicy")
     .post(subscribedPolicyController.subscribedPolicySave)
+    .all(errorHandlingController.MethodNotAllowed);
+router.route("/updateSubscribedPolicyContent")
+    .post(subscribedPolicyController.updateSubscribedPolicyContent)
     .all(errorHandlingController.MethodNotAllowed);
 router.route("/updateSubscribedPolicy")
     .post(subscribedPolicyController.subscribedPolicyUpdate)
@@ -130,16 +138,12 @@ router.route("/getOnePolicy/:id")
     .all(errorHandlingController.MethodNotAllowed);
 router.route("/reviewPolicy")
     .get(reviewPolicyController.reviewPolicyGet)
-    .all(errorHandlingController.MethodNotAllowed);
-router.route("/reviewPolicy")
     .post(reviewPolicyController.reviewPolicyPost)
     .all(errorHandlingController.MethodNotAllowed);
 
 // Client review subscribed policy
 router.route("/clientReviewer")
     .get(clientReviewPolicyController.clientReviewerGet)
-    .all(errorHandlingController.MethodNotAllowed);
-router.route("/clientReviewer")
     .post(clientReviewPolicyController.clientReviewerPost)
     .all(errorHandlingController.MethodNotAllowed);
 
