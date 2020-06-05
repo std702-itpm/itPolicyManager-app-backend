@@ -3,6 +3,24 @@
  */
 
 /**
+ * Middleware for request authorization check
+ * @param request
+ * @param response
+ * @param next
+ */
+exports.AuthorizationFilter = (request, response, next) => {
+    if (request.isAuthenticated()) {
+        next()
+    } else {
+        response.status(401)
+            .json({
+                status: "error",
+                message: "Authentication needed"
+            });
+    }
+};
+
+/**
  * Handler for not allowed request's methods
  * @param request
  * @param response

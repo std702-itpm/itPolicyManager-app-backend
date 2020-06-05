@@ -34,18 +34,7 @@ router.route("/signin")
 
 // Middleware
 // All endpoints below require authentication
-router.use((req, res, next) => {
-    if (req.isAuthenticated()) {
-        console.log("go to /hello");
-        next()
-    } else {
-        res.status(401)
-            .json({
-            status: "error",
-            message: "Authentication needed"
-        });
-    }
-});
+router.use(errorHandlingController.AuthorizationFilter);
 
 // Company controller
 router.route("/company")
