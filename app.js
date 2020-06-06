@@ -23,6 +23,8 @@ app.use(function (req, res, next) {
     next();
 });
 
+app.use(require('./controllers/nzbnController').entryPoint);
+
 // Routing
 const indexRoute = require('./routes');
 app.use('/', indexRoute);
