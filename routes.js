@@ -20,10 +20,17 @@ const editProfileController = require("./controllers/editProfileController");
 const reviewPolicyController = require("./controllers/reviewController");
 const clientReviewPolicyController = require("./controllers/clientReviewerController");
 const assessmentResultController = require("./controllers/assessmentResultController");
+const nzbnController = require("./controllers/nzbnController");
 
 // New company registration
 router.route("/register")
     .post(companyController.registerPost)
+    .all(errorHandlingController.MethodNotAllowed);
+
+// NZBN service
+// allows only 13-digit ids as a path parameter
+router.route("/nzbn/:nzbn(\\d{13})")
+    .get(nzbnController.entryPoint)
     .all(errorHandlingController.MethodNotAllowed);
 
 // Login
