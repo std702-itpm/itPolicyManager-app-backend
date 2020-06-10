@@ -20,10 +20,16 @@ const editProfileController = require("./controllers/editProfileController");
 const reviewPolicyController = require("./controllers/reviewController");
 const clientReviewPolicyController = require("./controllers/clientReviewerController");
 const assessmentResultController = require("./controllers/assessmentResultController");
+const nzbnController = require("./controllers/nzbnController");
 
 // New company registration
 router.route("/register")
     .post(companyController.registerPost)
+    .all(errorHandlingController.MethodNotAllowed);
+
+// NZBN service
+router.route("/nzbn/:nzbn")
+    .get(nzbnController.entryPoint)
     .all(errorHandlingController.MethodNotAllowed);
 
 // Login

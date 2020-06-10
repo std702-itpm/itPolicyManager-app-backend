@@ -23,6 +23,7 @@ app.use(function (req, res, next) {
     next();
 });
 
+
 // Routing
 const indexRoute = require('./routes');
 app.use('/', indexRoute);
