@@ -9,7 +9,7 @@ let expirationTime;
 /**
  * Checks if MBIE API access token has been gained and still valid,
  * and makes a request to the API for it, if needed.
- * <p>WARNING: there is NO error handling within the method.</p>
+ * WARNING: there is NO error handling within the method.
  *
  * @returns {Promise<string>} - A promise with an access token as a string
  */
