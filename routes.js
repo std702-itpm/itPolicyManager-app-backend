@@ -28,7 +28,6 @@ router.route("/register")
     .all(errorHandlingController.MethodNotAllowed);
 
 // NZBN service
-// allows only 13-digit ids as a path parameter
 router.route("/nzbn/:nzbn")
     .get(nzbnController.entryPoint)
     .all(errorHandlingController.MethodNotAllowed);
