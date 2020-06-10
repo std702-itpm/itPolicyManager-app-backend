@@ -51,7 +51,7 @@ async function refreshToken() {
             // Somewhere here should be an error processing
             throw new Error(err);
         });
-    processSuccess(data);
+    processAccessToken(data);
 }
 
 /**
@@ -73,7 +73,7 @@ function getAuthorizationToken() {
  * and its expiration time.
  * @param data - MBIE response's data object
  */
-function processSuccess(data) {
+function processAccessToken(data) {
     expirationTime = new Date(Date.now() + data.expires_in);
     accessToken = data.access_token;
 }

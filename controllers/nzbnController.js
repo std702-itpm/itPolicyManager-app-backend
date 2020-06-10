@@ -1,50 +1,60 @@
 const mbieService = require('../services/MbieApi');
 const axios = require('axios');
 
-exports.entryPoint = async (req, res) => {
+exports.entryPoint = (req, res) => {
     const businessNumber = req.params.nzbn;
-    let accessToken;
-    try {
-        accessToken = await mbieService.getAccessToken();
-    } catch (e) {
-        res.status(500)
-            .json({
-                status: "error",
-                message: "Internal server error"
-            });
-        return;
-    }
-    res.json(await requestCompanyInfo(businessNumber, accessToken));
+    mbieService.getAccessToken()
+        .then(token => requestCompanyInfo(businessNumber, token)
+            // in case of successful getting  access token
+            .then(companyInfo => {
+                res.json(companyInfo);
+            })
+            // in case of failed company's data request
+            .catch(() => {
+                res.status(400)
+                    .json({
+                        status: "error",
+                        message: "Incorrect NZBN"
+                    });
+            })
+        )
+        .catch(() => {
+            // In case if MBIE API call has failed
+            res.status(500)
+                .json({
+                    status: "error",
+                    message: "Internal server error"
+                });
+        });
 }
 
 /**
- *
- * @param nzbn
- * @param accessToken
- * @returns {Promise<JSON>} - Promise with a request result as a JSON
+ * Creates and makes a request to NZBN API
+ * @param nzbn - New Zealand Business Number
+ * @param accessToken - API's access token, should be obtained from MBIE API
+ * @returns {Promise<JSON>} - a promise with a company data JSON
  */
-async function requestCompanyInfo(nzbn, accessToken) {
-    const nzbnApiBaseUrl = 'https://api.business.govt.nz/services/v4/nzbn/entities/';
+function requestCompanyInfo(nzbn, accessToken) {
+    const nzbnApiBaseUrl = 'https://sandbox.api.business.govt.nz/services/v4/nzbn/entities/';
     const headers = {
         'Authorization': 'Bearer ' + accessToken
     };
 
     // Below is the actual call to the API
-    const reqResult = axios.get(nzbnApiBaseUrl + nzbn, {headers: headers})
+    return axios.get(nzbnApiBaseUrl + nzbn, {headers: headers})
         .then(res => {
-            return extractCompanyData(res.data)
+            return extractCompanyData(res.data);
         })
         .catch(err => {
-            // Somewhere here should be an error processing
-            return err.response.data;
+            // The error can be handled here, even logged
+            throw new Error(err);
         });
-    return reqResult;
 }
 
 /**
  * Extracts company's data from a successful API's response
- * @param response
- * @returns {Object} - JSON with necessary company's data
+ * @param response - NZBI API's response
+ * @returns {Object} - JSON with necessary company's data only
  */
 function extractCompanyData(response) {
     const companyData = {
