@@ -3,6 +3,16 @@ const axios = require('axios');
 
 exports.entryPoint = (req, res) => {
     const businessNumber = req.params.nzbn;
+
+    // First, the NZBN gained must be checked for matching NZBN format
+    if (!isInNzbnFormat(businessNumber)) {
+        console.log("> nzbn " + businessNumber + " has been declared INCORRECT");
+        res.status(400).json(getIncorrectNzbnBody());
+        return;
+    }
+
+    console.log("> " + businessNumber + " is a CORRECT NZBN");
+
     mbieService.getAccessToken()
         .then(token => requestCompanyInfo(businessNumber, token)
             // in case of successful getting  access token
@@ -12,10 +22,7 @@ exports.entryPoint = (req, res) => {
             // in case of failed company's data request
             .catch(() => {
                 res.status(400)
-                    .json({
-                        status: "error",
-                        message: "Incorrect NZBN"
-                    });
+                    .json(getIncorrectNzbnBody());
             })
         )
         .catch(() => {
@@ -35,7 +42,7 @@ exports.entryPoint = (req, res) => {
  * @returns {Promise<JSON>} - a promise with a company data JSON
  */
 function requestCompanyInfo(nzbn, accessToken) {
-    const nzbnApiBaseUrl = 'https://sandbox.api.business.govt.nz/services/v4/nzbn/entities/';
+    const nzbnApiBaseUrl = 'https://api.business.govt.nz/services/v4/nzbn/entities/';
     const headers = {
         'Authorization': 'Bearer ' + accessToken
     };
@@ -47,8 +54,14 @@ function requestCompanyInfo(nzbn, accessToken) {
         })
         .catch(err => {
             // The error can be handled here, even logged
+            console.log(err.response.data);
             throw new Error(err);
         });
+}
+
+function isInNzbnFormat(nzbn) {
+    const nzbnFormat = /^\d{13}$/;
+    return nzbnFormat.test(nzbn);
 }
 
 /**
@@ -63,6 +76,14 @@ function extractCompanyData(response) {
         'city': response.addresses.addressList[0].address3,
         'zip': response.addresses.addressList[0].postCode,
         'address1': response.addresses.addressList[0].address2
-    }
+    };
     return companyData;
+}
+
+function getIncorrectNzbnBody() {
+    const responseBody = {
+        status: "error",
+        message: "Incorrect NZBN"
+    };
+    return responseBody;
 }
