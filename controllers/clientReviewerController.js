@@ -1,24 +1,25 @@
 const mongoose = require('mongoose');
 require("../models/company.model.js");
 const Company = mongoose.model('Company');
+const SubscribedPolicy = mongoose.model('SubscribedPolicy');
 const User = mongoose.model('User');
 const Nodemailer = require('nodemailer');
+const SubscribedPolicyService = require("../services/SubscribedPolicyService.js");
 
+/**
+ * Path: clientReviewer?subscribedPolicyId=xxxxxxxxxxxxxx
+ */
 exports.clientReviewerGet = (req, res) => {
-    Company.findOne({
-            _id: req.query._id
-        },
-        function (err, response) {
-            if (!err) {
-                // console.log("company: " + response);
-                res.json(response);
-            } else {
-                console.log(err);
+    SubscribedPolicy.findOne({ _id: req.query.subscribedPolicyId },
+        (err, docs) => {
+            if (err) {
+                res.json(err)
             }
+            res.json(docs);
         });
 };
 
-// Email Notification for Registration 
+//Email Notification for Registration 
 //set up transporter
 const transporter = Nodemailer.createTransport({
     service: 'gmail',
@@ -28,115 +29,89 @@ const transporter = Nodemailer.createTransport({
     }
 });
 
-exports.clientReviewerPost = (req, res) => {
-    let data = req.body
-    Company.findOne({
-        _id: data.companyId
-    }, function (err, response) {
-        if (err) {
-            console.log(err);
-        } else {
-            // console.log("response.company_email ==> " + response.company_email);
-            if (data.review === "REJECTED") {
-                //remove reviewer
-                Company.updateOne({
-                    _id: data.companyId
-                }, {
-                    $pull: {
-                        [`subscribed_policy.${data.index}.reviewer`]: data.userId
-                    }
-                }, function (err, res){
-                    if (err) {
-                        console.log(err);
-                    } else { 
-                        //set up email content
-                        const mailOptions = {
-                            from: 'itpsychiatrist.policymanager@gmail.com', // sender address
-                            to: response.company_email, // list of receivers
-                            subject: data.policyName + ' Review Update', // Subject line
-                            html: '<h1> ' + data.policyName +
-                                ' has been reviewed.</h1>' + '<br><p>' +
-                                data.fname + ' ' + data.lname + ' has reviewed the policy. <br>' +
-                                'Below is the detail of the review:</p><br>' +
-                                'Review Feedback:' + ' ' + data.review +
-                                '<p>Please sign-in to your account to view Policy details. </p>'
-                        };
-                        transporter.sendMail(mailOptions, function (err, info) {
-                            if (err)
-                                console.log(err)
-                            else
-                                console.log(info);
-                        });
-                    } 
-                })
-            }else if(data.review === "ACCEPTED"){
-                //remove reviewer
-                Company.updateOne({
-                    _id: data.companyId
-                }, {
-                    $pull: {
-                        [`subscribed_policy.${data.index}.reviewer`]: data.userId
-                    }
-                }, function (err, res){
-                    if (err) {
-                        console.log(err);
-                    } else { 
-                        const mailOptions = {
-                            from: 'itpsychiatrist.policymanager@gmail.com', // sender address
-                            to: response.company_email, // list of receivers
-                            subject: data.policyName + ' Review Update', // Subject line
-                            html: '<h1> ' + data.policyName +
-                                ' has been reviewed.</h1>' + '<br><p>' +
-                                data.fname + ' ' + data.lname + ' has reviewed the policy. <br>' +
-                                'Below is the detail of the review:</p><br>' +
-                                'Review Feedback:' + ' ' + data.review +
-                                '<p>Please sign-in to your account to view Policy details. </p>'
-                        };
-                        transporter.sendMail(mailOptions, function (err, info) {
-                            if (err)
-                                console.log(err)
-                            else
-                                console.log(info);
-                        });
-                    }
-                })
-            }else{
-                // console.log("####LEFT COMMENT")
-                const mailOptions = {
-                    from: 'itpsychiatrist.policymanager@gmail.com', // sender address
-                    to: response.company_email, // list of receivers
-                    subject: data.policyName + ' Review Update', // Subject line
-                    html: '<h1> ' + data.policyName +
-                        ' has been reviewed.</h1>' + '<br><p>' +
-                        data.fname + ' ' + data.lname + ' has reviewed the policy. <br>' +
-                        'Below is the detail of the review:</p><br>' +
-                        'Review Comment:<br>' + data.comment +
-                        '<p>Please sign-in to your account to view Policy details. </p>'
-                };
-                transporter.sendMail(mailOptions, function (err, info) {
-                    if (err)
-                        console.log(err)
-                    else
-                        console.log(info);
-                });
-            }
-            if(data.review !== "COMMENT"){
-                User.updateOne({
-                    _id: data.userId
-                }, {
-                    $unset: {
-                        user_type: ""
-                    }
-                }, function (err, res) {
-                    if (err) {
-                        console.log(err);
-                    }
-                })
-            }
-            res.json({
-                value: "success",
-                message: "User details updated"
-            });
-        }
+const emailSender = function (emailDetail) {
+    let mailContent = '<h1> ' + emailDetail.policyName +
+        ' has been reviewed.</h1>' + '<br>'
+        + '<p>' + emailDetail.reviewerDetail.fname + ' '
+        + emailDetail.reviewerDetail.lname + ' has ' + emailDetail.reviewStatus + ' the policy. </p><br>';
+    if (emailDetail.feedback) {
+        mailContent = mailContent + '<p>Below is the detail of the review:</p><br>' +
+            'Review Feedback: ' + emailDetail.feedback + '<br>';
+    } else {
+        mailContent = mailContent + '<p>There is no feedback from this reviewer</p><br>'
+    }
+    mailContent = mailContent + '<p>Please sign-in to your account to view Policy details.</p>';
+
+    const mailOptions = {
+        from: 'itpsychiatrist.policymanager@gmail.com', // sender address
+        to: emailDetail.company_email, // list of receivers
+        subject: emailDetail.policyName + ' Review Update', // Subject line
+        html: mailContent
+    };
+    transporter.sendMail(mailOptions, function (err, info) {
+        if (err)
+            console.log(err)
+        else
+            console.log("Email has been sent.", info);
     });
+}
+
+/**
+ * Path: /submitPolicyReview
+ */
+exports.submitPolicyReview = (request, response) => {
+    const subscribedPolicyService = new SubscribedPolicyService();
+    let requestData = request.body;
+    let reviewerDetail;
+    let companyDetail;
+    User.findOne({ _id: requestData.userId }, (userError, user) => {
+        if (userError) {
+            response.status(500).json(userError)
+        }
+        reviewerDetail = user;
+    })
+    Company.findOne({ _id: requestData.companyId }, (companyError, company) => {
+        if (companyError) {
+            response.status(500).json(companyError)
+        }
+        companyDetail = company;
+    })
+    SubscribedPolicy.findOne({ _id: requestData.policyId }, (subscribedPolicyError, subscribedPolicy) => {
+        if (subscribedPolicyError) {
+            response.status(500).json(subscribedPolicyError)
+        }
+        let reviewedByEveryReviewer = true;
+
+        subscribedPolicy.reviewer_list.forEach(reviewer => {
+            if (reviewer.reviewer_id === requestData.userId) {
+                //if the policy is accepted or rejected
+                reviewer.review_status = requestData.isAccepted;
+            }
+            //If there's a reviewer that didn't review or rejected the policy
+            if (!reviewer.review_status) {
+                reviewedByEveryReviewer = false;
+            }
+        });
+
+        if (reviewedByEveryReviewer) {
+            subscribedPolicy.status = subscribedPolicyService.getAdoptionStatus();
+            subscribedPolicy.approval_date = Date.now();
+        }
+        //Send a notification email to a company initiator 
+        emailDetail = {
+            company_email: companyDetail.company_email,
+            reviewStatus: requestData.isAccepted ? "approved" : "rejected",
+            policyName: subscribedPolicy.policy_name,
+            reviewerDetail: reviewerDetail,
+            feedback: requestData.feedback
+        }
+        emailSender(emailDetail);
+
+        subscribedPolicy.save((saveError, document) => {
+            if (saveError) {
+                response.status(500).json(saveError)
+            }
+            response.json(document);
+        });
+    })
 }

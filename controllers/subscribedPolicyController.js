@@ -15,6 +15,7 @@ require('dotenv').config();
 const mongoConnectionString = "mongodb://127.0.0.1/it_psych_db";
 const Agenda = require('agenda');
 const agenda = new Agenda({ db: { address: mongoConnectionString } });
+const SubscribedPolicyService = require("../services/SubscribedPolicyService.js");
 
 const mongoose = require('mongoose');
 require("../models/company.model.js");
@@ -164,6 +165,17 @@ exports.subscribedPolicySave = (req, res) => {
         date_subscribed: moment(),
         date_expired: moment().add(12, 'M'),
         version: subscribedPolicyDetails.version
+        // reviewer_list:subscribedPolicyDetails.reviewer_list
+        //         review_status: subscribedPolicyDetails.review_status,
+        //         review_reminder_email_sent:subscribedPolicyDetails.review_reminder_email_sent,
+        //         review_reminder_email_error:subscribedPolicyDetails.review_reminder_email_error,
+        //         review_first_email_sent_time:subscribedPolicyDetails.review_first_email_sent_time,
+        //   reviewer_list:[{
+        //     review_status: false,
+        //     review_reminder_email_sent:false,
+        //     review_reminder_email_error:false,
+        //     review_first_email_sent_time:"",
+        //   }]
     });
     subscribedPolicy.save();
 }
@@ -187,9 +199,13 @@ exports.updateSubscribedPolicyContent = (req, res) => {
             }
         });
 }
-
+/**
+ * Start reviewing process of a subscribed policy
+ * path: /updateSubscribedPolicy
+ */
 exports.subscribedPolicyUpdate = (req, res) => {
     let subscribedPolicyDetails = req.body;
+    const subscribedPolicyService = new SubscribedPolicyService();
 
     console.log("SUBSCRIBERS==>" + subscribedPolicyDetails.reviewerList);
     console.log("Policy Id" + subscribedPolicyDetails.policy_id)
@@ -204,20 +220,27 @@ exports.subscribedPolicyUpdate = (req, res) => {
                     status: "failed"
                 });
             }
-            let user = [];
-            console.log("Subscribed Policy Reviewers: " + subscribedPolicyDetails.reviewer_list)
+            //Set the status to confirmation
+            subscribedPolicy.status = subscribedPolicyService.getComfirmationStatus();
             subscribedPolicy.reviewed_date = Date.now();
             subscribedPolicy.reviewer_list = subscribedPolicyDetails.reviewer_list;
+            //Update subscribed policy
             subscribedPolicy.save();
+
+            let user = [];
             for (let i = 0; i < subscribedPolicyDetails.reviewer_list.length; i++) {
                 User.findOne({
                     _id: subscribedPolicyDetails.reviewer_list[i].reviewer_id
                 }, function (error, response) {
                     user = response;
-                    console.log("Subscribed: " + subscribedPolicyDetails.companyId + "/" + subscribedPolicy.policy_name + "/" + user._id);
+                    //Replace empty space with dash
                     let pName = subscribedPolicy.policy_name.replace(/\s+/g, "-");
-                    let generalLink = ("http://localhost:3000/review-policy/" +
-                        subscribedPolicyDetails.companyId + "/" + pName + "/" + user._id);
+
+                    let reviewLink = ("http://localhost:3000/review-policy/"
+                        + subscribedPolicyDetails.companyId
+                        + "/" + subscribedPolicy._id
+                        + "/" + user._id);
+
                     const mailOptions = {
                         from: 'itpsychiatrist.policymanager@gmail.com', // sender address
                         to: user.email,
@@ -225,8 +248,7 @@ exports.subscribedPolicyUpdate = (req, res) => {
                         html: '<h2>Welcome to IT Policy Manager!</h2>' +
                             '<p> You have been set as a reviewer for ' + subscribedPolicy.policy_name + '<br>' +
                             'Below is the link to view and review the policy.<br><br>' +
-                            'Below is the link to view and review the policy.<br><br>' +
-                            '<a href=' + generalLink + '>CLICK HERE: Policy document to be reviewed.</a>  '
+                            '<a href=' + reviewLink + '>CLICK HERE: Policy document to be reviewed.</a>  '
                     };
                     transporter.sendMail(mailOptions, function (err, info) {
                         if (err) {
