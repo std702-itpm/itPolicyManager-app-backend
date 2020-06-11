@@ -150,7 +150,9 @@ router.route("/reviewPolicy")
 // Client review subscribed policy
 router.route("/clientReviewer")
     .get(clientReviewPolicyController.clientReviewerGet)
-    .post(clientReviewPolicyController.clientReviewerPost)
+    .all(errorHandlingController.MethodNotAllowed);
+router.route("/submitPolicyReview")
+    .post(clientReviewPolicyController.submitPolicyReview)
     .all(errorHandlingController.MethodNotAllowed);
 
 // Assessment Result
