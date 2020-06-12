@@ -22,6 +22,9 @@ const clientReviewPolicyController = require("./controllers/clientReviewerContro
 const assessmentResultController = require("./controllers/assessmentResultController");
 const nzbnController = require("./controllers/nzbnController");
 
+/**
+ * START - This set of APIs don't go through the authentication controller
+ */
 // New company registration
 router.route("/register")
     .post(companyController.registerPost)
@@ -38,6 +41,19 @@ router.route("/signin")
     .delete(authController.logout)
     .all(errorHandlingController.MethodNotAllowed);
 
+// Client review subscribed policy
+router.route("/clientReviewer")
+    .get(clientReviewPolicyController.clientReviewerGet)
+    .all(errorHandlingController.MethodNotAllowed);
+router.route("/submitPolicyReview")
+    .post(clientReviewPolicyController.submitPolicyReview)
+    .all(errorHandlingController.MethodNotAllowed);
+router.route("/policyComment")
+    .post(clientReviewPolicyController.policyComment)
+    .all(errorHandlingController.MethodNotAllowed);
+/**
+ * END - This set of APIs don't go through the authentication controller
+ */
 // Middleware
 // All endpoints below require authentication
 router.use(errorHandlingController.AuthorizationFilter);
@@ -145,14 +161,6 @@ router.route("/getOnePolicy/:id")
 router.route("/reviewPolicy")
     .get(reviewPolicyController.reviewPolicyGet)
     .post(reviewPolicyController.reviewPolicyPost)
-    .all(errorHandlingController.MethodNotAllowed);
-
-// Client review subscribed policy
-router.route("/clientReviewer")
-    .get(clientReviewPolicyController.clientReviewerGet)
-    .all(errorHandlingController.MethodNotAllowed);
-router.route("/submitPolicyReview")
-    .post(clientReviewPolicyController.submitPolicyReview)
     .all(errorHandlingController.MethodNotAllowed);
 
 // Assessment Result
