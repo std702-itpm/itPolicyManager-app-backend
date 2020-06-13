@@ -111,7 +111,7 @@ exports.companyPost = (req, res) => {
 const Nodemailer = require('nodemailer');
 
 //generate username
-function setupUsername(companyName) {
+async function setupUsername(companyName) {
     //remove space
     companyName = companyName.replace(/\s+/g, '');
     //get the first2 and last2 characters
@@ -124,19 +124,18 @@ function setupUsername(companyName) {
     let username = "";
     do {
         username = f2 + getRandomString(4) + l2;
-    } while (isUsernameUnique(username));
+    } while (! await isUsernameUnique(username));
     return username;
 }
 
-function isUsernameUnique(username) {
-    let count = User.countDocuments({username: username}, function (err, count) {
-        if (count) {
-            return count;
-        }
-        if (err) {
+async function isUsernameUnique(username) {
+    let count = await User.countDocuments({username: username})
+        .then(count => {    // here count is a Promise
+            return count;   // here count is the value of that Promise
+        })
+        .catch(err => {
             console.log(err);
-        }
-    });
+        });
     return count === 0;
 }
 
@@ -181,14 +180,14 @@ exports.registerPost = (req, res) => {
     let companyInfo = extractCompanyInfo(req.body);
     Company.findOne(
         {company_name: companyInfo.company_name, company_email: companyInfo.company_email},
-        function (error, company) {
+        async function (error, company) {
             if (company) {
                 res.json({
                     message: "Company has already been registered! Login Instead",
                     value: false
                 })
             } else {
-                let username = setupUsername(companyInfo.company_name);
+                let username = await setupUsername(companyInfo.company_name);
                 let password = setupPassword();
                 //Create new company
                 var NewCompany = new Company(companyInfo);
