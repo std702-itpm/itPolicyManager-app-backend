@@ -6,7 +6,7 @@ const Policy = mongoose.model('Policy');
 
 exports.companyGet = (req, res) => {
     if (req.query.type === "company") {
-        Company.findOne({ company_name: req.query._id })
+        Company.findOne({company_name: req.query._id})
             .exec()
             .then(oneCompany => {
                 res.json(oneCompany);
@@ -15,7 +15,7 @@ exports.companyGet = (req, res) => {
                 console.log(err);
             });
     } else if (req.query.type === "companyAll") {
-        Company.find({ status: true })
+        Company.find({status: true})
             .exec()
             .then(companies => {
                 res.json(companies);
@@ -24,7 +24,7 @@ exports.companyGet = (req, res) => {
                 console.log(err);
             });
     } else if (req.query.type === "companyAllInactive") {
-        Company.find({ status: false })
+        Company.find({status: false})
             .exec()
             .then(companies => {
                 res.json(companies)
@@ -34,7 +34,7 @@ exports.companyGet = (req, res) => {
             });
     } else {
         console.log("My role is user" + req.query._id)
-        User.findOne({ "_id": req.query._id })
+        User.findOne({"_id": req.query._id})
             .exec()
             .then(user => {
                 console.log("user: " + user);
@@ -87,7 +87,7 @@ exports.companyPost = (req, res) => {
             });
         // And of course we need UPDATE
     } else {
-        Company.findOneAndUpdate({ "company_name": matchPolicy.name },
+        Company.findOneAndUpdate({"company_name": matchPolicy.name},
             {
                 "$push": {
                     "match_policy": matchPolicy.policies
@@ -102,8 +102,8 @@ exports.companyPost = (req, res) => {
                 });
             })
             .catch(err => {
-                console.log(err);
-            }
+                    console.log(err);
+                }
             );
     }
 }
@@ -111,18 +111,33 @@ exports.companyPost = (req, res) => {
 const Nodemailer = require('nodemailer');
 
 //generate username
-function setupUsername(bNameInput, nzbnInput) {
+function setupUsername(companyName) {
     //remove space
-    bNameInput = bNameInput.replace(/\s/g, '');
+    companyName = companyName.replace(/\s+/g, '');
     //get the first2 and last2 characters
-    f2 = bNameInput.slice(0, 2);
-    l2 = bNameInput.slice(-2);
+    f2 = companyName.slice(0, 2);
+    l2 = companyName.slice(-2);
     //capital
     f2 = changeUppercase(f2);
     l2 = changeUppercase(l2);
     //generate username
-    username = f2 + nzbnInput + l2;
+    let username = "";
+    do {
+        username = f2 + getRandomString(4) + l2;
+    } while (isUsernameUnique(username));
     return username;
+}
+
+function isUsernameUnique(username) {
+    let count = User.countDocuments({username: username}, function (err, count) {
+        if (count) {
+            return count;
+        }
+        if (err) {
+            console.log(err);
+        }
+    });
+    return count === 0;
 }
 
 function changeUppercase(inputString) {
@@ -136,13 +151,16 @@ function changeUppercase(inputString) {
 
 //generate password
 function setupPassword() {
-    var length = 8,
-        charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
-        pass = "";
-    for (var i = 0, n = charset.length; i < length; ++i) {
-        pass += charset.charAt(Math.floor(Math.random() * n));
+    return getRandomString(8);
+}
+
+function getRandomString(length) {
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let string = "";
+    for (let i = 0; i < length; i++) {
+        string += charset.charAt(Math.floor(Math.random() * charset.length));
     }
-    return pass;
+    return string;
 }
 
 // Email Notification for Registration 
@@ -155,63 +173,88 @@ const transporter = Nodemailer.createTransport({
     }
 });
 
+/**
+ * Path: /register
+ * Method: POST
+ */
 exports.registerPost = (req, res) => {
-    let RegInfo = req.body; //Get the parsed information
-    console.log(RegInfo);
-    Company.findOne({ nzbn: RegInfo.nzbnInput }, function (error, company) {
-        //Save the Address
-        let Address = "";
-        Address = RegInfo.bAddr + " " + RegInfo.bAddr2 + " " + RegInfo.bCity + " " + RegInfo.bState + " " + RegInfo.bZip;
-        let username = setupUsername(RegInfo.bNameInput, RegInfo.nzbnInput);
-        let password = setupPassword();
-        if (company) {
-            res.json({
-                message: "Company already existed! Login Instead",
-                value: false
-            })
-        } else {
-            //Create new company
-            var NewCompany = new Company({
-                company_name: RegInfo.bNameInput,
-                company_email: RegInfo.bEmail,
-                nzbn: RegInfo.nzbnInput,
-                address: Address,
-                contact: RegInfo.bContact,
-                date_registered: Date.now(),
-                description: RegInfo.bDescription,
-                status: true
-                // logo: RegInfo,
-            })
-            console.log(NewCompany);
-            companyId = NewCompany._id;
-            NewCompany.save(function (err, Company) {
-                if (err) {
-                    res.json({
-                        message: "Registration failed!",
-                        value: false
-                    })
-                }
-                //Create a new user
-                var NewUser = new User({
-                    user_type: 'comp_initiator',
-                    company: companyId,
-                    username: username,
-                    password: password
-                })
-                console.log(NewUser);
-                NewUser.save(function (err) {
-                    postCreateNewUser(err, NewCompany, NewUser)
-                })
+    let companyInfo = extractCompanyInfo(req.body);
+    Company.findOne(
+        {company_name: companyInfo.company_name, company_email: companyInfo.company_email},
+        function (error, company) {
+            if (company) {
                 res.json({
-                    message: "Registration Successful!",
-                    value: true,
-                    id: companyId
+                    message: "Company has already been registered! Login Instead",
+                    value: false
                 })
-                console.log("res: " + res.id);
-            })
-        }
-    });
+            } else {
+                let username = setupUsername(companyInfo.company_name);
+                let password = setupPassword();
+                //Create new company
+                var NewCompany = new Company(companyInfo);
+                console.log(NewCompany);
+                companyId = NewCompany._id;
+                NewCompany.save(function (err, Company) {
+                    if (err) {
+                        res.json({
+                            message: "Registration failed!",
+                            value: false
+                        })
+                    }
+                    //Create a new user
+                    var NewUser = new User({
+                        user_type: 'comp_initiator',
+                        company: companyId,
+                        username: username,
+                        password: password
+                    })
+                    console.log(NewUser);
+                    NewUser.save(function (err) {
+                        postCreateNewUser(err, NewCompany, NewUser)
+                    })
+                    res.json({
+                        message: "Registration Successful!",
+                        value: true,
+                        id: companyId
+                    })
+                })
+            }
+        });
 };
+
+function extractCompanyInfo(requestBody) {
+    const companyAddress = [
+        requestBody.bAddr,
+        requestBody.bAddr2,
+        requestBody.bCity,
+        requestBody.bState,
+        requestBody.bZip
+    ].join(" ");
+
+    const normalizedCompanyName = normalizeString(requestBody.bNameInput)
+        .toUpperCase();
+
+    const normalizedEmail = requestBody.bEmail
+        .trim()
+        .replace(/\s+/g, "");
+
+    const companyInfo = {
+        company_name: normalizedCompanyName,
+        company_email: normalizedEmail,
+        contact: "",
+        nzbn: requestBody.nzbnInput,
+        address: normalizeString(companyAddress),
+        date_registered: Date.now(),
+        description: normalizeString(requestBody.bDescription),
+        status: true
+    };
+
+    return companyInfo;
+}
+
+function normalizeString(string) {
+    return string.trim().replace(/\s+/g, " ");
+}
 
 function postCreateNewUser(err, newCompany, newUser) {
     //set up email content
@@ -243,7 +286,7 @@ exports.companyDelete = (req, res) => {
         _id: data.companyId
     }, function (error, response) {
         if (!error) {
-            User.findOneAndRemove({ company: data.companyId }, function (error2, response2) {
+            User.findOneAndRemove({company: data.companyId}, function (error2, response2) {
                 if (!error2) {
                     res.json({
                         status: "success"
@@ -260,7 +303,7 @@ exports.companyDelete = (req, res) => {
 
 exports.getSuggestedPolicy = async (req, res) => {
     let user_id = req.query.user_id;
-    let query = await User.findOne({ _id: user_id })
+    let query = await User.findOne({_id: user_id})
         .populate({
             path: 'company',
             model: 'Company',
