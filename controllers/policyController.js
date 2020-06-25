@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const Policies = require("../models/policy.model.js");
 
-
 exports.policiesGet = (req, res) => {
     console.log(req.query._id);
     if (req.query.type === "one") {
@@ -25,72 +24,82 @@ exports.policiesGet = (req, res) => {
     }
 };
 
-exports.policiesPost = (req, res) => {
-    Policies.findById({
-            _id: req.body._id
-        },
-        function (err, policies) {
-            if (err) {
-                console.log("Error: " + err);
-            } else {
-                res.json(policies);
-            }
-        });
-};
-
+/**
+ * Used for both saving a new policy and updating an existing one
+ * <p>Path: /edit-policy</p>
+ * <p>Method: PUT</p>
+ */
 exports.updatePolicy = (req, res) => {
-    const policyDetails=req.body;
-    console.log(policyDetails.content)
-    debugger;
-    if(!(policyDetails._id===undefined)){
+    const policyDetails = req.body;
+    if (policyDetails._id) {
+        // This part is for updating an existing policy
         Policies.findOneAndUpdate({
-            "_id":policyDetails._id
-        },{
-            "content":policyDetails.content           
-        },
-        function (err, policy) {
-            if (err) {
-                console.log("Error: " + err);
-            } else {
-                res.status(204).json(policy);
-            }
+            "_id": policyDetails._id
+        }, {
+            "policy_name": policyDetails.policyName,
+            "content": policyDetails.content
+        })
+            .exec()
+            .then(policy => {
+                res.json(policy);
+            })
+            .catch(err => {
+                console.log("Error while updating a policy: " + err);
+                res.status(500)
+                    .json({
+                        status: "error",
+                        message: "Internal server error"
+                    })
+            });
+    } else {
+        // This part is for adding a new policy into the database
+        const newPolicy = new Policies({
+            policy_name: policyDetails.policyName,
+            content: policyDetails.content
         });
+        newPolicy.save()
+            .then((newPolicy) => {
+                res.json({
+                    status: "success",
+                    message: "Policy has been saved with id: " + newPolicy._id
+                });
+            })
+            .catch(err => {
+                console.log("Error while saving a new policy: " + err);
+                res.status(500)
+                    .json({
+                        status: "error",
+                        message: "Internal server error"
+                    })
+            });
     }
-    
 };
 
 exports.getAllPolicies = (req, res) => {
     Policies.find({}, (err, policies) => {
-        if (err){
+        if (err) {
             console.log("Error: " + err);
         } else {
             res.json(policies); // returns all policy
         }
     });
-
 }
 
 exports.getOnePolicy = (req, res) => {
     let id = req.params.id;
     Policies.findById({_id: id}, (err, policy) => {
-        if (err){
+        if (err) {
             console.log("Error: " + err);
         } else {
             res.json(policy);
         }
-
     });
-
 }
-
-
 
 exports.getAssessment = async (req, res) => {
     let id = req.body.policy_id;
-    
     const policy = await Policies.findOne(
-        { "_id": id }
+        {"_id": id}
     );
-
     console.log(policy);
 }

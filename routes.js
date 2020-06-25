@@ -79,7 +79,6 @@ router.route("/addUser")
 // Policy
 router.route("/policies")
     .get(policyController.policiesGet)
-    .post(policyController.policiesPost)
     .all(errorHandlingController.MethodNotAllowed);
 //router.get("/getSuggestedPolicy", companyController.getSuggestedPolicy);
 router.route("/edit-policy")
