@@ -25,19 +25,6 @@ exports.policiesGet = (req, res) => {
     }
 };
 
-exports.policiesPost = (req, res) => {
-    Policies.findById({
-            _id: req.body._id
-        },
-        function (err, policies) {
-            if (err) {
-                console.log("Error: " + err);
-            } else {
-                res.json(policies);
-            }
-        });
-};
-
 exports.updatePolicy = (req, res) => {
     const policyDetails=req.body;
     console.log(policyDetails.content)
