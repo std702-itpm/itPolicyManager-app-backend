@@ -56,25 +56,29 @@ exports.submitPolicyReview = (request, response) => {
                 reviewedByEveryReviewer = false;
             }
         });
-
+        //After all reviewers have finished the review, move the policy status to the next stage
         if (reviewedByEveryReviewer) {
-            subscribedPolicy.status = subscribedPolicyService.getAdoptionStatus();
+            
+            subscribedPolicy.status = subscribedPolicyService.getNextStatus(subscribedPolicy.status);
             subscribedPolicy.approval_date = Date.now();
+            //Remove list of reviewers
+            subscribedPolicy.reviewer_list = [];
         }
-        //Send a notification email to a company initiator 
-        emailDetail = {
-            company_email: companyDetail.company_email,
-            reviewStatus: requestData.isAccepted ? "approved" : "rejected",
-            policyName: subscribedPolicy.policy_name,
-            reviewerDetail: reviewerDetail,
-            feedback: requestData.feedback
-        }
-        emailSender(emailDetail);
-
+        
         subscribedPolicy.save((saveError, document) => {
             if (saveError) {
                 response.status(500).json(saveError)
             }
+            //Send a notification email to a company initiator
+            emailDetail = {
+                company_email: companyDetail.company_email,
+                reviewStatus: requestData.isAccepted ? "approved" : "rejected",
+                policyName: subscribedPolicy.policy_name,
+                reviewerDetail: reviewerDetail,
+                feedback: requestData.feedback
+            }
+            emailSender(emailDetail);
+
             response.json(document);
         });
     })

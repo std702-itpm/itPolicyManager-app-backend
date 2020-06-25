@@ -220,10 +220,15 @@ exports.subscribedPolicyUpdate = (req, res) => {
                     status: "failed"
                 });
             }
-            //Set the status to confirmation
-            subscribedPolicy.status = subscribedPolicyService.getComfirmationStatus();
-            subscribedPolicy.reviewed_date = Date.now();
-            subscribedPolicy.reviewer_list = subscribedPolicyDetails.reviewer_list;
+            //Set the status to confirmation if the policy status is not reviewed
+            if (subscribedPolicy.status === subscribedPolicyService.getNotReviewStatus()) {
+                subscribedPolicy.status = subscribedPolicyService.getComfirmationStatus();
+                subscribedPolicy.reviewed_date = Date.now();
+            }
+            let existingIds = new Set(subscribedPolicy.reviewer_list.map(d => d.reviewer_id));
+            subscribedPolicy.reviewer_list =
+                [...subscribedPolicy.reviewer_list,
+                ...subscribedPolicyDetails.reviewer_list.filter(reviewer => !existingIds.has(reviewer.reviewer_id))];
             //Update subscribed policy
             subscribedPolicy.save();
 

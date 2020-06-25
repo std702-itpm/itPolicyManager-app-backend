@@ -4,6 +4,12 @@ const Company = mongoose.model('Company');
 const User = mongoose.model('User');
 const Policy = mongoose.model('Policy');
 
+/**
+ * Path: /company
+ * Method: GET
+ * @param {*} req 
+ * @param {*} res 
+ */
 exports.companyGet = (req, res) => {
     if (req.query.type === "company") {
         Company.findOne({ company_name: req.query._id })
@@ -33,6 +39,7 @@ exports.companyGet = (req, res) => {
                 console.log(err);
             });
     } else {
+        // Type = user
         console.log("My role is user" + req.query._id)
         User.findOne({ "_id": req.query._id })
             .exec()
