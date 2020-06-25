@@ -7,8 +7,6 @@ const Policy = mongoose.model('Policy');
 /**
  * Path: /company
  * Method: GET
- * @param {*} req 
- * @param {*} res 
  */
 exports.companyGet = (req, res) => {
     if (req.query.type === "company") {
