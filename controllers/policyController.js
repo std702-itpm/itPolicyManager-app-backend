@@ -103,3 +103,23 @@ exports.getAssessment = async (req, res) => {
     );
     console.log(policy);
 }
+
+exports.deletePolicy = (req, res) => {
+    const policyId = req.params.policyId;
+    Policies.deleteOne({"_id": policyId})
+        .exec()
+        .then(() => {
+            res.json({
+                status: "success",
+                message: "Policy " + policyId + " has been deleted"
+            });
+        })
+        .catch((err) => {
+            console.log("Error while deletion a new policy: " + err);
+            res.status(500)
+                .json({
+                    status: "error",
+                    message: "Internal server error"
+                })
+        });
+}
