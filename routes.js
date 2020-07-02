@@ -8,7 +8,7 @@ const errorHandlingController = require("./controllers/errorHandlingController")
 
 // Define controllers here
 const authController = require("./controllers/authenticationController");
-const questionController = require("./controllers/questionController");
+const surveyController = require("./controllers/surveyController");
 const assessmentController = require("./controllers/assessmentController");
 const companyController = require("./controllers/companyController");
 const userController = require("./controllers/userController");
@@ -46,6 +46,11 @@ router.route("/getAllPolicies")
     .all(errorHandlingController.MethodNotAllowed);
 router.route("/getOnePolicy/:id")
     .get(policyController.getOnePolicy)
+    .all(errorHandlingController.MethodNotAllowed);
+
+// Get survey
+router.route("/takeSurvey")
+    .get(surveyController.getQuestions)
     .all(errorHandlingController.MethodNotAllowed);
 
 // Client review subscribed policy
@@ -94,10 +99,8 @@ router.route("/edit-policy")
     .put(policyController.updatePolicy)
     .all(errorHandlingController.MethodNotAllowed);
 
-// Get questions
-router.route("/questions")
-    .get(questionController.questionsGet)
-    .post(questionController.questionsPost)
+router.route("/updateSurvey")
+    .post(surveyController.questionsPost)
     .all(errorHandlingController.MethodNotAllowed);
 
 // Get assessment
