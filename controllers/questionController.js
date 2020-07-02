@@ -13,11 +13,6 @@ exports.questionsGet = (req, res) => {
     });
 };
 
-exports.questionsDelete = (req,res) => {
-    console.log(req.body._id);
-    
-};
-
 //add questions
 function addQuestions(question){
     var question=new Questions({

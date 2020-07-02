@@ -20,17 +20,6 @@ const mongoose = require('mongoose');
 const Company = mongoose.model('Company');
 const policy = mongoose.model('Policy');
 
-
-/*!
-    Getting the payment details from Stripe API
-*/
-exports.createPaymentGet = (req, res) => {
-  res.send({
-    message: "Get is working Add your Stripe Secret Key to the .require('stripe') statement!"
-  });
-};
-
-
 /*!
     Send payment to stripe API
     set subscribed policy of the company in the company collection

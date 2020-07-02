@@ -14,7 +14,6 @@ const companyController = require("./controllers/companyController");
 const userController = require("./controllers/userController");
 const policyController = require("./controllers/policyController");
 const subscribedPolicyController = require("./controllers/subscribedPolicyController");
-const surveyResultController = require("./controllers/surveyResultController");
 const createPaymentController = require("./controllers/createPaymentController");
 const editProfileController = require("./controllers/editProfileController");
 const reviewPolicyController = require("./controllers/reviewController");
@@ -92,9 +91,6 @@ router.route("/questions")
     .get(questionController.questionsGet)
     .post(questionController.questionsPost)
     .all(errorHandlingController.MethodNotAllowed);
-router.route("/deleteQuestions")
-    .post(questionController.questionsDelete)
-    .all(errorHandlingController.MethodNotAllowed);
 
 // Get assessment
 router.route("/assessment")
@@ -107,7 +103,6 @@ router.route("/deleteassessment")
 
 // Payment
 router.route("/create_paymentintent")
-    .get(createPaymentController.createPaymentGet)
     .post(createPaymentController.createPaymentPost)
     .all(errorHandlingController.MethodNotAllowed);
 
@@ -125,25 +120,12 @@ router.route("/deleteprofile")
     .post(editProfileController.editProfilePut)
     .all(errorHandlingController.MethodNotAllowed);
 
-// Match policy or survey result
-router.route("/surveyResult")
-    .get(surveyResultController.surveyResultGet)
-    .post(surveyResultController.surveyResultPost)
-    .all(errorHandlingController.MethodNotAllowed);
-
 // Subscribed policy
-router.route("/subscribedPolicy")
-    .get(subscribedPolicyController.subscribedPolicyGet)
-    .post(subscribedPolicyController.subscribedPolicyPost)
-    .all(errorHandlingController.MethodNotAllowed);
 router.route("/getSubscribedPolicy")
     .get(subscribedPolicyController.getSubscribedPolicy)
     .all(errorHandlingController.MethodNotAllowed);
 router.route("/addSubscribedPolicy")
     .post(subscribedPolicyController.subscribedPolicySave)
-    .all(errorHandlingController.MethodNotAllowed);
-router.route("/updateSubscribedPolicyContent")
-    .post(subscribedPolicyController.updateSubscribedPolicyContent)
     .all(errorHandlingController.MethodNotAllowed);
 router.route("/updateSubscribedPolicy")
     .post(subscribedPolicyController.subscribedPolicyUpdate)
@@ -153,7 +135,7 @@ router.route("/sendAssessmentToReviewers")
     .all(errorHandlingController.MethodNotAllowed);
 
 // Review subscribed policy
-router.route("/getAllPolicies/")
+router.route("/getAllPolicies")
     .get(policyController.getAllPolicies)
     .all(errorHandlingController.MethodNotAllowed);
 router.route("/getOnePolicy/:id")
@@ -161,7 +143,6 @@ router.route("/getOnePolicy/:id")
     .all(errorHandlingController.MethodNotAllowed);
 router.route("/reviewPolicy")
     .get(reviewPolicyController.reviewPolicyGet)
-    .post(reviewPolicyController.reviewPolicyPost)
     .all(errorHandlingController.MethodNotAllowed);
 
 // Assessment Result
