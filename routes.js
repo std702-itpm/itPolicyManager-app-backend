@@ -89,10 +89,7 @@ router.route("/addUser")
     .all(errorHandlingController.MethodNotAllowed);
 
 // Policy
-router.route("/policies")
-    .get(policyController.policiesGet)
-    .all(errorHandlingController.MethodNotAllowed);
-router.route("/policies/:policyId")
+router.route("/deletePolicy/:policyId")
     .delete(policyController.deletePolicy)
     .all(errorHandlingController.MethodNotAllowed);
 router.route("/edit-policy")

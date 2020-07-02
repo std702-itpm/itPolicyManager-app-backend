@@ -1,29 +1,6 @@
 const mongoose = require('mongoose');
 const Policies = require("../models/policy.model.js");
 
-exports.policiesGet = (req, res) => {
-    console.log(req.query._id);
-    if (req.query.type === "one") {
-        Policies.findById({
-            _id: req.query._id
-        }, function (err, policies) {
-            if (err) {
-                console.log("Error: " + err);
-            } else {
-                res.json(policies);
-            }
-        });
-    } else { //Get all policys
-        Policies.find(function (err, policies) {
-            if (err) {
-                console.log("Error: " + err);
-            } else {
-                res.json(policies);
-            }
-        });
-    }
-};
-
 /**
  * Used for both saving a new policy and updating an existing one
  * <p>Path: /edit-policy</p>
