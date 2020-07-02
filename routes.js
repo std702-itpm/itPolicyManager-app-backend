@@ -40,6 +40,14 @@ router.route("/signin")
     .delete(authController.logout)
     .all(errorHandlingController.MethodNotAllowed);
 
+// Policies are open for viewing on the Landing Page
+router.route("/getAllPolicies")
+    .get(policyController.getAllPolicies)
+    .all(errorHandlingController.MethodNotAllowed);
+router.route("/getOnePolicy/:id")
+    .get(policyController.getOnePolicy)
+    .all(errorHandlingController.MethodNotAllowed);
+
 // Client review subscribed policy
 router.route("/clientReviewer")
     .get(clientReviewPolicyController.clientReviewerGet)
@@ -135,12 +143,6 @@ router.route("/sendAssessmentToReviewers")
     .all(errorHandlingController.MethodNotAllowed);
 
 // Review subscribed policy
-router.route("/getAllPolicies")
-    .get(policyController.getAllPolicies)
-    .all(errorHandlingController.MethodNotAllowed);
-router.route("/getOnePolicy/:id")
-    .get(policyController.getOnePolicy)
-    .all(errorHandlingController.MethodNotAllowed);
 router.route("/reviewPolicy")
     .get(reviewPolicyController.reviewPolicyGet)
     .all(errorHandlingController.MethodNotAllowed);
