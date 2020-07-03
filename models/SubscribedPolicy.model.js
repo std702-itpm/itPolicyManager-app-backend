@@ -39,6 +39,4 @@ const SubscribedPolicy = new Schema({
   }]
 });
 
-
-
 module.exports = mongoose.model("SubscribedPolicy", SubscribedPolicy);
