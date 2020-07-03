@@ -24,49 +24,30 @@ const NodeMailer = require('nodemailer');
 var moment = require('moment');
 
 exports.getSubscribedPolicy = async (req, res) => {
-    let subscribedPolicy = [];
-    //console.log("CompanyID: " + req.query.company_id)
-    if (req.query.policy_type === "one") {
-        console.log("query params: ", req.query)
-        SubscribedPolicy.findOne({
-            _id: new ObjectId(req.query.policy_id)
-        }, function (error, subscribedPolicy) {
-            if (!error) {
-                res.json(subscribedPolicy)
-            }
-            else {
-                console.log(error)
-            }
-        })
-    } else {
-        SubscribedPolicy.find({
-            company_id: req.query.company_id
-        }, function (error, response) {
-            subscribedPolicy = response;
-            if (error) {
-                console.log("Error: " + error);
-            } else {
-                if (subscribedPolicy !== null) {
-                    if (req.query.policy_id !== "") {
-                        for (let i = 0; i < subscribedPolicy.length; i++) {
-                            if (subscribedPolicy[i].policy_id === req.query.policy_id) {
-                                subscribedPolicy = subscribedPolicy[i];
-                                break;
-                            }
-                        }
-                    }
-                    res.json(subscribedPolicy);
-                } else {
-                    res.json({
-                        message: "empty"
-                    });
-                }
-                console.log(subscribedPolicy);
-            }
-        })
-    }
-
+    SubscribedPolicy.findOne({
+        _id: new ObjectId(req.query.policy_id)
+    }, function (error, subscribedPolicy) {
+        if (error) {
+            res.status(500)
+                .json(error);
+            console.log(error)
+        }
+        res.json(subscribedPolicy)
+    })
 };
+
+exports.getSubscribedPoliciesByCompanyId = async (req, res) => {
+    SubscribedPolicy.find({
+        company_id: req.query.company_id
+    }, function (error, documents) {
+        if (error) {
+            res.status(500)
+                .json(error);
+            console.log(error)
+        }
+        res.json(documents);
+    })
+}
 
 exports.subscribedPolicySave = (req, res) => {
     let policyDetails = req.body;
@@ -180,7 +161,7 @@ exports.sendAssessmentToReviewers = (req, res) => {
 
         selectedUsers.forEach(user => {
             const assessmentLink =
-                "http://localhost:3000/send-assessment/" + document._id + "/" + user._id;
+                "http://localhost:3000/assessment/" + document._id;
             user.assigned_date = moment();
             user.due_date = moment().add(1, 'M');
             user.taken_date = null
