@@ -1,18 +1,15 @@
 /*!
-
 =========================================================
 * IT Policy Manager - v1.1.0
 =========================================================
-
 * Coded by IT Policy Team
-
 =========================================================
-
 * Policy subscription component for server side.
 */
 require('dotenv').config();
 
 const SubscribedPolicyService = require("../services/SubscribedPolicyService.js");
+const EmailService = require("../services/EmailService.js");
 
 const mongoose = require('mongoose');
 require("../models/company.model.js");
@@ -22,16 +19,17 @@ const Company = mongoose.model('Company');
 const SubscribedPolicy = mongoose.model('SubscribedPolicy');
 const Policy = mongoose.model('Policy');
 const User = mongoose.model('User');
+var ObjectId = mongoose.Types.ObjectId;
 const NodeMailer = require('nodemailer');
 var moment = require('moment');
 
 exports.getSubscribedPolicy = async (req, res) => {
     let subscribedPolicy = [];
-    console.log("CompanyID: " + req.query.company_id)
+    //console.log("CompanyID: " + req.query.company_id)
     if (req.query.policy_type === "one") {
-        console.log(req.query.policyId)
+        console.log("query params: ", req.query)
         SubscribedPolicy.findOne({
-            policy_id: req.query.policyId
+            _id: new ObjectId(req.query.policy_id)
         }, function (error, subscribedPolicy) {
             if (!error) {
                 res.json(subscribedPolicy)
@@ -40,8 +38,7 @@ exports.getSubscribedPolicy = async (req, res) => {
                 console.log(error)
             }
         })
-    }
-    else {
+    } else {
         SubscribedPolicy.find({
             company_id: req.query.company_id
         }, function (error, response) {
@@ -72,19 +69,22 @@ exports.getSubscribedPolicy = async (req, res) => {
 };
 
 exports.subscribedPolicySave = (req, res) => {
-    let subscribedPolicyDetails = req.body;
-    var subscribedPolicy = new SubscribedPolicy({
-        company_id: subscribedPolicyDetails.companyId,
-        policy_id: subscribedPolicyDetails.policyId,
-        policy_name: subscribedPolicyDetails.name,
-        content: subscribedPolicyDetails.content,
-        reviewed_date: subscribedPolicyDetails.reviewed_date,
-        approval_date: subscribedPolicyDetails.approval_date,
-        date_subscribed: subscribedPolicyDetails.date_subscribed,
-        status: subscribedPolicyDetails.status,
+    let policyDetails = req.body;
+
+    const subscribedPolicyService = new SubscribedPolicyService();
+    let subscribedPolicy = new SubscribedPolicy({
+        company_id: policyDetails.companyId,
+        policy_id: policyDetails.policyData._id,
+        policy_name: policyDetails.policyData.policy_name,
+        content: policyDetails.policyData.content,
+        assessments: policyDetails.policyData.assessments,
+        reviewed_date: "",
+        approval_date: "",
+        date_subscribed: Date.now(),
+        status: subscribedPolicyService.getNotReviewStatus(),
         date_subscribed: moment(),
         date_expired: moment().add(12, 'M'),
-        version: subscribedPolicyDetails.version
+        version: 1
     });
     subscribedPolicy.save();
 }
@@ -166,42 +166,58 @@ exports.subscribedPolicyUpdate = (req, res) => {
 
 exports.sendAssessmentToReviewers = (req, res) => {
     var details = req.body;
-    console.log("ID: " + details.policyId)
+    const emailService = new EmailService();
 
-    Policy.findById({
+    SubscribedPolicy.findById({
         _id: details.policyId
-    }, function (error, response) {
-        if (!error) {
-            let generalLink = ("http://localhost:3000/send-assessment/" + response._id + "/" + details.userId);
-            const mailOptions = {
-                from: 'itpsychiatrist.policymanager@gmail.com', // sender address
-                to: details.email,
-                subject: 'Awareness Assessment',
-                html: 'You have been set to take a short test for ' + response.policy_name + '</br></br>' +
-                    'Below is the link to view and review the policy.<br><br>' +
-                    '<a href=' + generalLink + '>CLICK HERE: Policy Assessment to be taken.</a>' +
-                    '</br></br></br></br></br></br></br>' +
-                    'Thank you.</br></br>' +
-                    'Regards,</br' +
-                    'IT Policy Manager'
-            };
-            transporter.sendMail(mailOptions, function (err, info) {
-                if (err) {
-                    console.log(err);
-                }
-                else {
+    }, function (error, document) {
+        if (error) {
+            res.status(500)
+                .json(error);
+            console.log(error);
+        }
+        let selectedUsers = details.selectedUsers;
 
-                    console.log(info);
-                }
-            })
-            res.json({
-                status: "success"
-            })
-        }
-        else {
-            console.log(error)
-        }
+        selectedUsers.forEach(user => {
+            const assessmentLink =
+                "http://localhost:3000/send-assessment/" + document._id + "/" + user._id;
+            user.assigned_date = moment();
+            user.due_date = moment().add(1, 'M');
+            user.taken_date = null
+            emailService.sendEmail(user.email,
+                "Awareness Assessment for " + document.policy_name,
+                prepareEmailContentForAssessment({
+                    assessmentLink: assessmentLink,
+                    policy_name: document.policy_name
+                }));
+        });
+
+        document.assessment_takers = selectedUsers;
+        document.save((saveError) => {
+            if (saveError) {
+                res.status(500)
+                    .json({
+                        status: "failed",
+                        message: saveError
+                    });
+            } else {
+                res.json({
+                    status: "success",
+                    message: "Assessment emails have been sent to selected employees."
+                })
+            }
+        });
     });
+}
+
+const prepareEmailContentForAssessment = function (mailContents) {
+    return 'You have been set to take a short test for ' + mailContents.policy_name + '</br></br>' +
+        'Below is the link to view and review the policy.<br><br>' +
+        '<a href=' + mailContents.assessmentLink + '>CLICK HERE: Policy Assessment to be taken.</a>' +
+        '</br></br>' +
+        'Thank you.</br>' +
+        'Regards,</br>' +
+        'IT Policy Manager';
 }
 
 const transporter = NodeMailer.createTransport({
