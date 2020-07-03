@@ -3,7 +3,7 @@ require("../models/question.model.js");
 const Questions = mongoose.model('Questions');
 
 //get questions
-exports.questionsGet = (req, res) => {
+exports.getQuestions = (req, res) => {
     Questions.find(function (err, questions) {
         if (err) {
             console.log("Error: " + err);
@@ -11,11 +11,6 @@ exports.questionsGet = (req, res) => {
             res.json(questions);
         }
     });
-};
-
-exports.questionsDelete = (req,res) => {
-    console.log(req.body._id);
-    
 };
 
 //add questions
@@ -36,17 +31,9 @@ exports.questionsPost = (req, res) => {
         }
         else{
             Questions.findById(question._id, function (err, goalQuestion) {
-            
                 goalQuestion.question_content = question.question_content;
-           // for (var i = 0; i < goalQuestion.options.length; i++) {
-               // goalQuestion.options[i].name = question.options[i].name;
-                //console.log(question.options[i].name)
-               // goalQuestion.options[i].policy = question.options[i].policy;
             goalQuestion.options = question.options;
-            // console.log(goalQuestion);
             goalQuestion.save();
-            
-                      
         });
         }
         
