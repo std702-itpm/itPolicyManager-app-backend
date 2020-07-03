@@ -75,7 +75,8 @@ exports.submitPolicyReview = (request, response) => {
                 reviewStatus: requestData.isAccepted ? "approved" : "rejected",
                 policyName: subscribedPolicy.policy_name,
                 reviewerDetail: reviewerDetail,
-                feedback: requestData.feedback
+                feedback: requestData.feedback,
+                reviewedByEveryReviewer: reviewedByEveryReviewer
             }
             emailSender(emailDetail);
 
@@ -133,14 +134,18 @@ const emailSender = function (emailDetail) {
     let mailContent = '<h1> ' + emailDetail.policyName +
         ' has been reviewed.</h1>' + '<br>'
         + '<p>' + emailDetail.reviewerDetail.fname + ' '
-        + emailDetail.reviewerDetail.lname + ' has ' + emailDetail.reviewStatus + ' the policy. </p><br>';
+        + emailDetail.reviewerDetail.lname + ' has ' + emailDetail.reviewStatus + ' the policy. </p>';
     if (emailDetail.feedback) {
         mailContent = mailContent + '<p>Below is the detail of the review:</p><br>' +
-            'Review Feedback: ' + emailDetail.feedback + '<br>';
+            '<p>Review Feedback: ' + emailDetail.feedback + '</p><br>';
     } else {
         mailContent = mailContent + '<p>There is no feedback from this reviewer</p><br>'
     }
     mailContent = mailContent + '<p>Please sign-in to your account to view Policy details.</p>';
+    if(emailDetail.reviewedByEveryReviewer){
+        mailContent = mailContent + 
+        '<p>This policy is reviewed by every reviewer and moved to the next status.</p>';
+    }
 
     const mailOptions = {
         from: 'itpsychiatrist.policymanager@gmail.com', // sender address

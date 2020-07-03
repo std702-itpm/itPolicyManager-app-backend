@@ -63,6 +63,14 @@ router.route("/submitPolicyReview")
 router.route("/policyComment")
     .post(clientReviewPolicyController.policyComment)
     .all(errorHandlingController.MethodNotAllowed);
+// Subscribed policy
+router.route("/getSubscribedPolicy")
+    .get(subscribedPolicyController.getSubscribedPolicy)
+    .all(errorHandlingController.MethodNotAllowed);
+router.route("/getSubscribedPoliciesByCompanyId")
+    .get(subscribedPolicyController.getSubscribedPoliciesByCompanyId)
+    .all(errorHandlingController.MethodNotAllowed);
+
 /**
  * END - This set of APIs don't go through the authentication controller
  */
@@ -129,9 +137,6 @@ router.route("/deleteprofile")
     .all(errorHandlingController.MethodNotAllowed);
 
 // Subscribed policy
-router.route("/getSubscribedPolicy")
-    .get(subscribedPolicyController.getSubscribedPolicy)
-    .all(errorHandlingController.MethodNotAllowed);
 router.route("/addSubscribedPolicy")
     .post(subscribedPolicyController.subscribedPolicySave)
     .all(errorHandlingController.MethodNotAllowed);
