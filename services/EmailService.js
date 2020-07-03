@@ -23,7 +23,6 @@ const EmailService = function() {
                 console.log(err);
             }
             else {
-
                 console.log(info);
             }
         })
