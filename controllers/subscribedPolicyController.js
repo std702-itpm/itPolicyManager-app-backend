@@ -24,16 +24,16 @@ const NodeMailer = require('nodemailer');
 var moment = require('moment');
 
 exports.getSubscribedPolicy = async (req, res) => {
-    SubscribedPolicy.findOne({
-        _id: new ObjectId(req.query.policy_id)
-    }, function (error, subscribedPolicy) {
-        if (error) {
-            res.status(500)
-                .json(error);
-            console.log(error)
-        }
-        res.json(subscribedPolicy)
-    })
+    SubscribedPolicy.findOne({ _id: new ObjectId(req.query.subscribedPolicyId) })
+        .populate('assessment_takers.user')
+        .exec((error, subscribedPolicy) => {
+            if (error) {
+                res.status(500)
+                    .json(error);
+                console.log(error)
+            }
+            res.json(subscribedPolicy)
+        })
 };
 
 exports.getSubscribedPoliciesByCompanyId = async (req, res) => {
@@ -157,23 +157,27 @@ exports.sendAssessmentToReviewers = (req, res) => {
                 .json(error);
             console.log(error);
         }
-        let selectedUsers = details.selectedUsers;
+        let assessment_takers = [];
 
-        selectedUsers.forEach(user => {
+        details.selectedUsers.forEach(user => {
+            let assessment_taker = {};
+            assessment_taker.user = user;
             const assessmentLink =
                 "http://localhost:3000/assessment/" + document._id;
-            user.assigned_date = moment();
-            user.due_date = moment().add(1, 'M');
-            user.taken_date = null
+            assessment_taker.assigned_date = moment();
+            assessment_taker.due_date = moment().add(1, 'M');
+            assessment_taker.taken_date = null
             emailService.sendEmail(user.email,
                 "Awareness Assessment for " + document.policy_name,
                 prepareEmailContentForAssessment({
                     assessmentLink: assessmentLink,
                     policy_name: document.policy_name
                 }));
+            assessment_takers.push(assessment_taker);
         });
 
-        document.assessment_takers = selectedUsers;
+        document.assessment_takers = assessment_takers;
+        document.markModified('assessment_takers')
         document.save((saveError) => {
             if (saveError) {
                 res.status(500)
