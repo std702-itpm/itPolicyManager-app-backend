@@ -77,20 +77,21 @@ exports.subscribedPolicySave = (req, res) => {
 exports.subscribedPolicyUpdate = (req, res) => {
     let subscribedPolicyDetails = req.body;
     const subscribedPolicyService = new SubscribedPolicyService();
-
+    const emailService = new EmailService();
     console.log("SUBSCRIBERS==>" + subscribedPolicyDetails.reviewerList);
     console.log("Policy Id" + subscribedPolicyDetails.policy_id)
     SubscribedPolicy.findOne(
         {
-            policy_id: subscribedPolicyDetails.policy_id,
-            company_id: subscribedPolicyDetails.companyId
+            _id: new ObjectId(subscribedPolicyDetails.policy_id),
         }, function (error, subscribedPolicy) {
             if (error) {
                 console.log(error);
-                res.json({
-                    status: "failed"
-                });
+                res.status(500)
+                    .json({
+                        status: "failed"
+                    });
             }
+
             //Set the status to confirmation if the policy status is not reviewed
             if (subscribedPolicy.status === subscribedPolicyService.getNotReviewStatus()) {
                 subscribedPolicy.status = subscribedPolicyService.getComfirmationStatus();
@@ -109,31 +110,18 @@ exports.subscribedPolicyUpdate = (req, res) => {
                     _id: subscribedPolicyDetails.reviewer_list[i].reviewer_id
                 }, function (error, response) {
                     user = response;
-                    //Replace empty space with dash
-                    let pName = subscribedPolicy.policy_name.replace(/\s+/g, "-");
 
                     let reviewLink = ("http://localhost:3000/review-policy/"
                         + subscribedPolicyDetails.companyId
                         + "/" + subscribedPolicy._id
                         + "/" + user._id);
 
-                    const mailOptions = {
-                        from: 'itpsychiatrist.policymanager@gmail.com', // sender address
-                        to: user.email,
-                        subject: subscribedPolicy.policy_name + " " + 'review request',
-                        html: '<h2>Welcome to IT Policy Manager!</h2>' +
-                            '<p> You have been set as a reviewer for ' + subscribedPolicy.policy_name + '<br>' +
-                            'Below is the link to view and review the policy.<br><br>' +
-                            '<a href=' + reviewLink + '>CLICK HERE: Policy document to be reviewed.</a>  '
-                    };
-                    transporter.sendMail(mailOptions, function (err, info) {
-                        if (err) {
-                            console.log(err);
-                        }
-                        else {
-                            console.log(info);
-                        }
-                    })
+                    emailService.sendEmail(user.email,
+                        subscribedPolicy.policy_name + " " + 'review request',
+                        prepareEmailContentForPolicyReviewer({
+                            policy_name: subscribedPolicy.policy_name,
+                            reviewLink: reviewLink
+                        }));
                 })
             }
             console.log("response is: " + SubscribedPolicy)
@@ -144,6 +132,13 @@ exports.subscribedPolicyUpdate = (req, res) => {
         });
 
 };
+
+const prepareEmailContentForPolicyReviewer = function (mailContents) {
+    return '<h2>Welcome to IT Policy Manager!</h2>' +
+        '<p> You have been set as a reviewer for ' + mailContents.policy_name + '<br>' +
+        'Below is the link to view and review the policy.<br><br>' +
+        '<a href=' + mailContents.reviewLink + '>CLICK HERE: Policy document to be reviewed.</a>'
+}
 
 exports.sendAssessmentToReviewers = (req, res) => {
     var details = req.body;
