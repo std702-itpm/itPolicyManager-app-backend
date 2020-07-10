@@ -70,6 +70,10 @@ router.route("/getSubscribedPolicy")
 router.route("/getSubscribedPoliciesByCompanyId")
     .get(subscribedPolicyController.getSubscribedPoliciesByCompanyId)
     .all(errorHandlingController.MethodNotAllowed);
+// Assessment Result
+router.route("/assessmentResult")
+    .post(assessmentResultController.PostResult)
+    .all(errorHandlingController.MethodNotAllowed);
 
 /**
  * END - This set of APIs don't go through the authentication controller
@@ -150,11 +154,6 @@ router.route("/sendAssessmentToReviewers")
 // Review subscribed policy
 router.route("/reviewPolicy")
     .get(reviewPolicyController.reviewPolicyGet)
-    .all(errorHandlingController.MethodNotAllowed);
-
-// Assessment Result
-router.route("/assessmentResult")
-    .post(assessmentResultController.PostResult)
     .all(errorHandlingController.MethodNotAllowed);
 
 // Handler for 404. This method must be placed after all other routes

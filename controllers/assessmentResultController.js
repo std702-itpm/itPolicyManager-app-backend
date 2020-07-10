@@ -4,20 +4,24 @@ const AssessmentResult = mongoose.model("AssessmentResult");
 
 //Save the score from assessment result
 exports.PostResult = (req, res) => {
-    var data = req.body;
-    var result = new AssessmentResult({
+    let data = req.body;
+    let assessmentResult = new AssessmentResult({
         score: data.score,
+        max_score: data.maxScore,
         assessment_taken_date: Date.now(),
-        status: true.query,
-        reviewer_id: data.reviewerId,
-
+        is_accep_compliance: data.isComplianceChecked,
+        assessment_taker: data.user,
     })
-    result.save(function (err, res) {
-        if (!err) {
-            console.log(res)
+    assessmentResult.save(function (err, document) {
+        if (err) {
+            res.status(500)
+                .json(error);
+            console.log(error)
         }
-        else {
-            console.log(err)
-        }
+        console.log(document)
+        res.json({
+            message: "Your assessment has been saved successfully.",
+            result: document
+        })
     });
 };
