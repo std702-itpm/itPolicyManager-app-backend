@@ -70,14 +70,53 @@ function isInNzbnFormat(nzbn) {
  * @returns {Object} - JSON with necessary company's data only
  */
 function extractCompanyData(response) {
-    const companyData = {
+    let companyData = {
         'nzbn': response.nzbn,
         'companyName': response.entityName,
         'city': response.addresses.addressList[0].address3,
         'zip': response.addresses.addressList[0].postCode,
-        'address1': response.addresses.addressList[0].address2
+        'phoneNumber': extractPhoneNumber(response.phoneNumbers),
+        'email': extractEmail(response.emailAddresses)
     };
+    const addresses = extractAddresses(response.addresses.addressList);
+    companyData = Object.assign(companyData, addresses)
     return companyData;
+}
+
+function extractPhoneNumber(phoneNumbers) {
+    if (!phoneNumbers.length) {
+        return "";
+    }
+    let extractedPhoneNumber;
+    extractedPhoneNumber =
+        "+" + phoneNumbers[0].phoneCountryCode +
+        phoneNumbers[0].phoneAreaCode +
+        phoneNumbers[0].phoneNumber;
+    return extractedPhoneNumber;
+}
+
+function extractEmail(emailAddresses) {
+    if (!emailAddresses.length) {
+        return "";
+    }
+    return emailAddresses[0].emailAddress;
+}
+
+function extractAddresses(addressesList) {
+    if (!addressesList.length) {
+        return null;
+    }
+
+    const address1 = [addressesList[0].address1, addressesList[0].address2].join(", ");
+    let address2 = "";
+    if (addressesList.length > 1) {
+        address2 = [addressesList[1].address1, addressesList[1].address2].join(", ");
+    }
+    const address = {
+        'address1' : address1,
+        'address2' : address2
+    }
+    return address;
 }
 
 function getIncorrectNzbnBody() {
